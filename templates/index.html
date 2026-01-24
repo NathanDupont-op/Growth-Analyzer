@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GrowthAnalyzer - Startup Potential</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-gradient: linear-gradient(90deg, #007bff, #00d4ff);
+            --bg: #f8fbff;
+            --text-dark: #1a1a2e;
+            --text-grey: #6c757d;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            --success: #00c853;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        nav {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            /* Growth is Bold */
+            color: black;
+        }
+
+        .logo span {
+            color: black;
+            font-weight: 400;
+            /* Analyzer is Regular */
+        }
+
+        .btn-download {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+            display: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+        }
+
+        /* ... */
+
+        .search-box-wrapper {
+            background: white;
+            padding: 8px;
+            /* Small wrapper padding keeps button on edge */
+            border-radius: 50px;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.3);
+            /* Stronger visible glow */
+            display: flex;
+            align-items: center;
+            /* Center items vertically */
+            width: 100%;
+            max-width: 1000px;
+            /* Limit width */
+            margin: 0 auto;
+            /* Ensure centering */
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .search-box-wrapper:hover,
+        .search-box-wrapper:focus-within {
+            box-shadow: 0 0 25px rgba(0, 123, 255, 0.5);
+            /* Stronger glow but no scale transform */
+            border-color: #007bff;
+        }
+
+        input {
+            border: none;
+            outline: none;
+            flex: 1;
+            padding: 10px 30px;
+            /* Space on the left for text */
+            font-size: 16px;
+            border-radius: 40px;
+            background: transparent;
+            text-align: left;
+            /* Center the text */
+        }
+
+        .btn-analyze {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            /* Reduced button size */
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            white-space: nowrap;
+            /* Prevent text wrap */
+        }
+
+        .btn-analyze:hover {
+            transform: scale(1.02);
+            background: #0069d9;
+        }
+
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            margin-top: 60px;
+            color: var(--text-grey);
+            text-align: center;
+        }
+
+        .feature-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-icon {
+            font-size: 30px;
+            opacity: 0.7;
+        }
+
+        /* Loading State */
+        #loading-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .loader-bar {
+            width: 300px;
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-progress {
+            width: 0%;
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .loader-text {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 18px;
+        }
+
+        .loader-steps {
+            font-size: 14px;
+            color: var(--text-grey);
+            height: 20px;
+        }
+
+        /* Dashboard State */
+        #dashboard-section {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin-bottom: 20px;
+        }
+
+        .gauge-container svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .gauge-container circle {
+            fill: none;
+            stroke-width: 20;
+            stroke-linecap: round;
+        }
+
+        .bg-circle {
+            stroke: #e0e0e0;
+        }
+
+        .score-circle {
+            stroke: url(#gradient);
+            stroke-dasharray: 630;
+            /* 2 * PI * 100 approx */
+            stroke-dashoffset: 630;
+            transition: stroke-dashoffset 1.5s ease-out;
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .score-label {
+            font-size: 16px;
+            color: var(--text-grey);
+            margin-bottom: 40px;
+            font-weight: 600;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            /* Force 2 columns */
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            /* Limit width to keep 2-col look tight */
+            margin-bottom: 40px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 30px;
+            /* Increased padding */
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            /* More gap */
+        }
+
+        .metric-icon {
+            width: 60px;
+            /* Larger icon bg */
+            height: 60px;
+            background: #f0f2f5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            /* Unused if SVG, but kept */
+            color: #555;
+            flex-shrink: 0;
+            /* Prevents squashing (fixes non-round shape) */
+        }
+
+        .metric-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--text-grey);
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .detail-box {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .detail-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: #444;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="logo">Growth<span>Analyzer</span></div>
+        <div style="display:flex; gap:10px;">
+            <button id="btn-debug"
+                style="background:#6c757d; color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer;">Debug
+                View</button>
+            <button class="btn-download" id="btn-download">Download PDF Report</button>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- Hero Section -->
+        <div id="hero-section">
+            <h1 class="hero-title">Analyze Startup<br>Growth Potential</h1>
+            <div class="search-box-wrapper">
+                <input type="text" id="url-input" placeholder="Enter Startup URL (e.g., company.com)..." />
+                <button class="btn-analyze" onclick="startAnalysis()">Start Analysis</button>
+            </div>
+
+            <div class="features">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <!-- Activity/Analysis Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                    </div>
+                    <span>Instant Grade</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <!-- Database/Funding Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                            <path d="M3 5v14c0 1.66 4 3 9 3s 9-1.34 9-3V5"></path>
+                        </svg>
+                    </div>
+                    <span>Funding Data</span>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <!-- Peer Comparison: Bar Chart -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                    </div>
+                    <span>Peer Comparison</span>
+                </div>
+            </div>
+
+            <div class="developer-message"
+                style="margin-top: 50px; text-align: center; max-width: 700px; color: #555; background: white; padding: 20px 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.05);">
+                <p style="margin: 0; line-height: 1.6; font-size: 15px;">
+                    <span style="font-weight: 600; color: var(--text-dark);">Hello, my name is Nathan.</span><br>
+                    This tool is currently under active development. Please note that scoring consistency and scraping
+                    accuracy are still being optimized. I would value your feedback or advice to help me improve it:
+                    <a href="mailto:nathandupont746@gmail.com"
+                        style="color: var(--primary); text-decoration: none; font-weight: 600;">nathandupont746@gmail.com</a>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Loading Section -->
+        <div id="loading-section">
+            <div class="loader-text">Computing the score...</div>
+            <div class="loader-bar">
+                <div class="loader-progress" id="loader-progress"></div>
+            </div>
+            <div class="loader-steps" id="loader-steps">Connecting to server...</div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section">
+            <div class="gauge-container">
+                <svg>
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#007bff;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <circle class="bg-circle" cx="125" cy="125" r="100"></circle>
+                    <circle class="score-circle" id="score-circle" cx="125" cy="125" r="100"></circle>
+                </svg>
+                <div class="score-text" id="score-value">0</div>
+            </div>
+            <div class="score-label">Growth Potential Grade</div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <!-- Sector: Building/Industry Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                            <path d="M9 22v-4h6v4"></path>
+                            <path d="M8 6h.01"></path>
+                            <path d="M16 6h.01"></path>
+                            <path d="M8 10h.01"></path>
+                            <path d="M16 10h.01"></path>
+                            <path d="M8 14h.01"></path>
+                            <path d="M16 14h.01"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <span class="metric-label">Sector :</span>
+                        <span class="metric-value" id="res-sector">-</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <!-- Employees: Users Group -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <span class="metric-label">Employees :</span>
+                        <span class="metric-value" id="res-employees">-</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <!-- Funding: Dollar Sign in Circle -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="1" x2="12" y2="23"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <span class="metric-label">Total Funding :</span>
+                        <span class="metric-value" id="res-funding">-</span>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <!-- Rounds: Layers/Stack -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <span class="metric-label">Rounds :</span>
+                        <span class="metric-value" id="res-round">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-box">
+                    <div class="detail-title" style="color:red">Weaknesses</div>
+                    <ul id="res-weaknesses"></ul>
+                </div>
+                <div class="detail-box">
+                    <div class="detail-title" style="color:green">Strengths</div>
+                    <ul id="res-strengths"></ul>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        let currentAnalysisData = null;
+
+        const MOCK_DATA = {
+            score_global: 78,
+            sector: "Artificial Intelligence",
+            metrics: {
+                employees: "120",
+                funding: "$15.4M",
+                round: "Series B"
+            },
+            strengths: ["High Market Potential", "Strong Technical Team", "Scalable Product"],
+            weaknesses: ["Competitive Landscape", "High Burn Rate"]
+        };
+
+        document.getElementById('btn-debug').addEventListener('click', () => {
+            document.getElementById('hero-section').style.display = 'none';
+            currentAnalysisData = MOCK_DATA;
+            showDashboard(MOCK_DATA);
+        });
+
+        async function startAnalysis() {
+            const urlInput = document.getElementById('url-input').value;
+            if (!urlInput) return alert("Please enter a URL");
+
+            // UI Transitions
+            document.getElementById('hero-section').style.display = 'none';
+            document.getElementById('loading-section').style.display = 'flex';
+
+            // Simulate progression steps
+            const progress = document.getElementById('loader-progress');
+            const stepsFn = document.getElementById('loader-steps');
+
+            let p = 0;
+            const interval = setInterval(() => {
+                p += Math.random() * 5;
+                if (p > 90) p = 90; // Hold at 90 until response
+                progress.style.width = p + '%';
+
+                if (p < 30) stepsFn.innerText = "Initializing Crawler...";
+                else if (p < 60) stepsFn.innerText = "Scraping content...";
+                else if (p < 80) stepsFn.innerText = "Analyzing with AI...";
+                else stepsFn.innerText = "Finalizing Score...";
+            }, 200);
+
+            try {
+                const response = await fetch('http://localhost:8000/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: urlInput })
+                });
+
+                const data = await response.json();
+                currentAnalysisData = data; // Store for PDF
+
+                clearInterval(interval);
+                progress.style.width = '100%';
+
+                if (response.ok) {
+                    setTimeout(() => {
+                        showDashboard(data);
+                    }, 500);
+                } else {
+                    alert("Error: " + (data.detail || "Unknown error"));
+                    location.reload();
+                }
+
+            } catch (error) {
+                clearInterval(interval);
+                alert("Network Error: Make sure API is running.");
+                location.reload();
+            }
+        }
+
+        document.getElementById('btn-download').addEventListener('click', async () => {
+            if (!currentAnalysisData) return;
+
+            const btn = document.getElementById('btn-download');
+            btn.innerText = "Generating PDF...";
+
+            try {
+                const response = await fetch('http://localhost:8000/download-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentAnalysisData)
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "Startup_Report.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    alert("Failed to generate PDF");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error downloading PDF");
+            } finally {
+                btn.innerText = "Download PDF Report";
+            }
+        });
+
+
+        function showDashboard(data) {
+            document.getElementById('loading-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'flex';
+            document.getElementById('btn-download').style.display = 'block';
+
+            // Fill Data
+            const globalScore = data.score_global || 0;
+            document.getElementById('res-sector').innerText = data.sector || "N/A";
+            document.getElementById('res-employees').innerText = data.metrics?.employees || "N/A";
+            document.getElementById('res-funding').innerText = data.metrics?.funding || "N/A";
+            document.getElementById('res-round').innerText = data.metrics?.round || "N/A";
+
+            // Lists
+            const sList = document.getElementById('res-strengths');
+            sList.innerHTML = "";
+            (data.strengths || []).forEach(item => {
+                const li = document.createElement('li');
+                li.innerText = item;
+                sList.appendChild(li);
+            });
+
+            const wList = document.getElementById('res-weaknesses');
+            wList.innerHTML = "";
+            (data.weaknesses || []).forEach(item => {
+                const li = document.createElement('li');
+                li.innerText = item;
+                wList.appendChild(li);
+            });
+
+            // Animate Gauge
+            animateScore(globalScore);
+        }
+
+        function animateScore(score) {
+            const circle = document.getElementById('score-circle');
+            const text = document.getElementById('score-value');
+
+            // 2 * PI * 100 = 628.32
+            const circumference = 628.32;
+            const offset = circumference - (score / 100) * circumference;
+
+            // Layout hack to force reflow if needed, but CSS transition handles it
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 100);
+
+            let current = 0;
+            const step = Math.ceil(score / 50);
+            const counter = setInterval(() => {
+                current += step;
+                if (current >= score) {
+                    current = score;
+                    clearInterval(counter);
+                }
+                text.innerText = current;
+            }, 20);
+        }
+    </script>
+</body>
+
+</html>
