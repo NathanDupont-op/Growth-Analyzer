@@ -13,7 +13,7 @@ def analyze_startup(markdown_content: str) -> dict:
     Analyse le contenu markdown d'une startup en utilisant l'API Groq (Llama 3).
     Retourne un dictionnaire structuré avec les scores et l'analyse.
     """
-    system_prompt = "You are an expert VC analyst. Extract structured information from the text and rate the startup out of 100 based on factor linked to potential growth"
+    system_prompt = "You are an expert VC analyst. Extract structured information from the text and rate the startup out of 100 based on factor linked to potential growth, be strict in your grading"
     
     # User prompt detailing expected JSON structure
     user_prompt = f"""
@@ -55,4 +55,5 @@ def analyze_startup(markdown_content: str) -> dict:
         
     except Exception as e:
         return {"error": f"Erreur lors de l'analyse : {str(e)}"}
+
 
