@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, Request # Ajout de Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from fastapi.templating import Jinja2Templates # Ajout pour le HTML
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from scraper import get_startup_content
 from analyzer import analyze_startup
@@ -23,7 +23,7 @@ if sys.platform == "win32":
 
 app = FastAPI(title="Startup Analyzer API")
 
-# Configuration des Templates (Dossier créé à l'étape 1)
+# Configuration des Templates
 templates = Jinja2Templates(directory="templates")
 
 app.add_middleware(
@@ -57,20 +57,66 @@ def run_cli_scraper(url):
 
 @app.post("/analyze")
 async def analyze_startup_endpoint(request: AnalyzeRequest):
-    # ... (Votre code existant reste identique ici) ...
-    # Je ne le répète pas pour gagner de la place, gardez votre logique
     print(f"DEBUG: Received request for {request.url}")
-    # ... (code inchangé)
-    # Copiez-collez votre logique existante ici
+    logger.info(f"Received analysis request for: {request.url}")
+    start_total = time.time()
+    
+    # Check removed as user hardcoded key in analyzer.py
+    # if not os.environ.get("GROQ_API_KEY"): ...
+
+    try:
+        # Step 1: Scrape content
+        print("DEBUG: Starting scraping in subprocess...")
+        t0 = time.time()
+        
+        # Run scraping via CLI subprocess to ensure total isolation
+        content = await asyncio.to_thread(run_cli_scraper, request.url)
+        
+        t1 = time.time()
+        print(f"DEBUG: Scraping finished in {t1 - t0:.2f}s. Content length: {len(content) if content else 0} chars")
+        
+        # Check for scraping errors
+        if not content:
+            raise HTTPException(status_code=400, detail="Scraping returned empty content.")
+
+        if content.startswith("Erreur") or content.startswith("Une erreur"):
+            raise HTTPException(status_code=400, detail=content)
+            
+        # Step 2: Analyze content
+        print("DEBUG: Starting analysis with Groq...")
+        t2 = time.time()
+        analysis_result = await asyncio.to_thread(analyze_startup, content)
+        t3 = time.time()
+        print(f"DEBUG: Analysis finished in {t3 - t2:.2f}s.")
+        
+        if "error" in analysis_result:
+             logger.error(f"Analysis error: {analysis_result['error']}")
+             raise HTTPException(status_code=500, detail=analysis_result["error"])
+        
+        print(f"DEBUG: Total request time: {time.time() - start_total:.2f}s")
+        return analysis_result
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Internal server error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 @app.post("/download-pdf")
 async def download_pdf_endpoint(data: dict):
-    # ... (code inchangé) ...
-    filename = f"report_{int(time.time())}.pdf"
-    create_pdf_report(data, filename)
-    return FileResponse(filename, media_type='application/pdf', filename=filename)
+    try:
+        # Generate PDF
+        filename = f"report_{int(time.time())}.pdf"
+        create_pdf_report(data, filename)
+        
+        # Return file
+        return FileResponse(filename, media_type='application/pdf', filename=filename)
+    except Exception as e:
+        logger.error(f"PDF generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"PDF Error: {str(e)}")
 
-# --- C'EST ICI QUE TOUT CHANGE ---
 @app.get("/")
 async def read_root(request: Request):
     # Au lieu de retourner du JSON, on retourne le fichier HTML
