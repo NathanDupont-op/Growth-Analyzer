@@ -45,7 +45,7 @@ def analyze_startup(markdown_content: str) -> dict:
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_prompt},
             ],
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             response_format={"type": "json_object"},
         )
         
@@ -55,3 +55,4 @@ def analyze_startup(markdown_content: str) -> dict:
         
     except Exception as e:
         return {"error": f"Erreur lors de l'analyse : {str(e)}"}
+
