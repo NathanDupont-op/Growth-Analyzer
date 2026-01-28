@@ -121,5 +121,8 @@ def create_pdf_report(data: dict, filename: str = "report.pdf") -> str:
         pdf.multi_cell(0, 8, f"- {safe_str(point)}", new_x="LMARGIN", new_y="NEXT")
     pdf.ln()
 
-    pdf.output(filename)
-    return filename
+    output_path = os.path.join("/tmp", filename)
+    
+    pdf.output(output_path)
+    return output_path 
+
