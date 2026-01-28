@@ -28,7 +28,7 @@ fastapi==0.128.0
 fastuuid==0.14.0
 filelock==3.20.3
 fonttools==4.61.1
-fpdf==1.7.2
+fpdf2
 frozenlist==1.8.0
 fsspec==2026.1.0
 greenlet==3.3.0
@@ -104,4 +104,5 @@ xxhash==3.6.0
 yarl==1.22.0
 zipp==3.23.0
 groq
+
 
