@@ -107,15 +107,20 @@ async def analyze_startup_endpoint(request: AnalyzeRequest):
 @app.post("/download-pdf")
 async def download_pdf_endpoint(data: dict):
     try:
-        # Generate PDF
         filename = f"report_{int(time.time())}.pdf"
-        create_pdf_report(data, filename)
+        file_path = create_pdf_report(data, filename)
         
-        # Return file
-        return FileResponse(filename, media_type='application/pdf', filename=filename)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=500, detail="PDF generated but file not found on server.")
+            
+        return FileResponse(
+            path=file_path, 
+            media_type='application/pdf', 
+            filename=filename
+        )
     except Exception as e:
-        logger.error(f"PDF generation error: {e}")
-        raise HTTPException(status_code=500, detail=f"PDF Error: {str(e)}")
+         logger.error(f"PDF generation error: {e}")
+         raise HTTPException(status_code=500, detail=f"PDF Error: {str(e)}")
 
 @app.get("/")
 async def read_root(request: Request):
@@ -126,3 +131,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
