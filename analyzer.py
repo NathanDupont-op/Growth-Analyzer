@@ -13,7 +13,7 @@ def analyze_startup(markdown_content: str) -> dict:
     Analyse le contenu markdown d'une startup en utilisant l'API Groq (Llama 3).
     Retourne un dictionnaire structuré avec les scores et l'analyse.
     """
-    system_prompt = "You are a ruthless VC evaluator. Your goal is to identify weak points and risks. You must grade strictly on a scale of 0-100. Constraint: You are extremely hard to impress. Most startups should score arround 50. Only startups with irrefutable proof of traction and a defensible moat should score above 70. If you find generic statements or lack of hard data, the score must be low. Be critical, direct, and justify every point deducted."
+    system_prompt = "You are a ruthless VC evaluator. Your goal is to identify weak points and risks. You must grade strictly on a scale of 0-100. Constraint: You are extremely hard to impress. Most startups should score arround 50. Only startups with irrefutable proof of traction and a defensible moat should score above 70. If you find generic statements or lack of hard data, the score must be under 50. Be critical, direct, and justify every point deducted."
     
     # User prompt detailing expected JSON structure
     user_prompt = f"""
@@ -55,6 +55,7 @@ def analyze_startup(markdown_content: str) -> dict:
         
     except Exception as e:
         return {"error": f"Erreur lors de l'analyse : {str(e)}"}
+
 
 
 
