@@ -41,6 +41,7 @@
             font-weight: 700;
             /* Growth is Bold */
             color: black;
+            cursor: pointer;
         }
 
         .logo span {
@@ -347,7 +348,7 @@
 <body>
 
     <nav>
-        <div class="logo">Growth<span>Analyzer</span></div>
+        <div class="logo" onclick="window.location.reload()">Growth<span>Analyzer</span></div>
         <div style="display:flex; gap:10px;">
             <button id="btn-debug"
                 style="background:#6c757d; color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer;">Debug
@@ -694,4 +695,5 @@
 
 
 </html>
+
 
