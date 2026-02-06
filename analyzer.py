@@ -3,19 +3,30 @@ from groq import Groq
 import json
 
 # Initialize Groq client
-# Ensure GROQ_API_KEY is set in environment variables
 client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
 )
 
 def analyze_startup(markdown_content: str) -> dict:
     """
-    Analyse le contenu markdown d'une startup en utilisant l'API Groq (Llama 3).
-    Retourne un dictionnaire structuré avec les scores et l'analyse.
+    Analyse le contenu markdown d'une startup avec une rigueur extrême.
     """
-    system_prompt = "You are a ruthless VC evaluator. Your goal is to identify weak points and risks. You must grade strictly on a scale of 0-100. Constraint: You are extremely hard to impress. Most startups should score arround 30. Only startups with irrefutable proof of traction and a defensible moat should score above 60. If you find generic statements or lack of hard data, the score must be under 30. Be critical, direct, and justify every point deducted."
     
-    # User prompt detailing expected JSON structure
+    system_prompt = """
+    You are 'The Grim Reaper of VC', an automated auditing algorithm designed to reject 99% of startups.
+    
+    YOUR CORE DIRECTIVE:
+    1. START AT A SCORE OF 0. The startup must EARN every single point.
+    2. Skepticism is your default state. If a claim lacks numbers (revenue, retention, CAC), assume it is a lie or wishful thinking.
+    3. FLUFF PENALTY: usage of buzzwords like "AI-powered", "Disruptive", "Revolutionary" without technical backing results in immediate point deduction.
+    4. SCORING GUIDE:
+       - 0-20: Idea stage, no product, no numbers.
+       - 21-40: MVP exists, but unproven market fit. (MOST STARTUPS FALL HERE)
+       - 41-60: Real revenue, but scaling issues or weak moat.
+       - 61-80: Strong traction, profitable unit economics, defensible.
+       - 81-100: Unicorn trajectory with irrefutable hard data.
+    """
+    
     user_prompt = f"""
     Analyze the following content and extract the requested information in strict JSON format.
     
@@ -25,18 +36,29 @@ def analyze_startup(markdown_content: str) -> dict:
     Expected Response Format (JSON only):
     {{
         "name": "string",
-        "sector": "string (e.g., SAAS, fintech, or 'N/A' if unknown)",
-        "score_global": int (0-100),
-        "metrics": {{
-            "employees": "string (e.g., '10-50' or '42' or 'N/A')",
-            "funding": "string (e.g., '$12M' or 'Bootstrapped' or 'N/A')",
-            "round": "string (e.g., 'Series A' or 'Seed' or 'N/A')"
+        "sector": "string (or 'N/A')",
+        
+        "audit_log": {{
+            "missing_data": ["List exactly what data is missing (e.g., no revenue, no team background)"],
+            "red_flags": ["List vague claims or generic marketing fluff found in text"],
+            "risk_assessment": "Short ruthless summary of why this might fail"
         }},
-        "strengths": ["string", "string", ...],
-        "weaknesses": ["string", "string", ...]
+        
+        "metrics": {{
+            "employees": "string (e.g., '10-50' or 'N/A')",
+            "funding": "string (or 'N/A')",
+            "round": "string (or 'N/A')"
+        }},
+        
+        "strengths": ["Only list strengths backed by HARD DATA"],
+        "weaknesses": ["List all risks, lack of data, and competitive threats"],
+        
+        "score_logic": "Explain briefly why the score is low based on the 'Start at 0' rule",
+        "score_global": int (0-100)
     }}
     
-    CRITICAL INSTRUCTION: If you cannot find a specific piece of information (employees, funding, round), you MUST set the value to "N/A". DO NOT GUESS or HALLUCINATE data not present in the content. 
+    IMPORTANT: You must fill 'audit_log' and 'score_logic' BEFORE calculating 'score_global'. 
+    If metrics (Revenue, Users) are missing, the score CANNOT exceed 30.
     """
 
     try:
@@ -47,16 +69,11 @@ def analyze_startup(markdown_content: str) -> dict:
             ],
             model="llama-3.3-70b-versatile",
             response_format={"type": "json_object"},
+            temperature=0.1
         )
         
-        # Le contenu de la réponse est une chaîne JSON
         json_str = response.choices[0].message.content
         return json.loads(json_str)
         
     except Exception as e:
         return {"error": f"Erreur lors de l'analyse : {str(e)}"}
-
-
-
-
-
