@@ -2,14 +2,13 @@ import os
 from groq import Groq
 import json
 
-# Initialize Groq client
 client = Groq(
     api_key=os.environ.get("GROQ_API_KEY"),
 )
 
 def analyze_startup(markdown_content: str) -> dict:
     """
-    Analyse le contenu markdown d'une startup avec une rigueur extrême.
+    Analyzes the markdown file of a startup with extreme rigor.
     """
     
     system_prompt = """
@@ -77,3 +76,4 @@ def analyze_startup(markdown_content: str) -> dict:
         
     except Exception as e:
         return {"error": f"Erreur lors de l'analyse : {str(e)}"}
+
